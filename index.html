@@ -10,83 +10,84 @@
 </head>
 
 <body>
-    <header>
-        <h1>巡礼对比图生成器</h1>
-    </header>
+    <main class="app-container">
+        <header>
+            <h1>巡礼对比图生成器</h1>
+        </header>
 
-    <img class="output-image">
+        <img class="output-image">
 
-    <!-- Overlay Mode Controls -->
-    <div class="config-box overlay-controls">
-        <!-- Image Settings Group -->
-        <div class="control-group">
-            <div class="compact-control-row">
-                <label>边框</label>
-                <input type="range" min="0" max="100" step="1" value="0" class="input-range-margin-overlay">
-                <span class="config-margin-value-overlay value-text">0</span>
-            </div>
-            <div class="compact-control-row">
-                <label>底色</label>
-                <div class="color-picker-wrapper">
-                    <input type="color" value="#EEEEEE" class="input-background-color-overlay">
+        <!-- Overlay Mode Controls -->
+        <div class="config-box overlay-controls">
+            <!-- Image Settings Group -->
+            <div class="control-group">
+                <div class="compact-control-row">
+                    <label>边框</label>
+                    <input type="range" min="0" max="100" step="1" value="0" class="input-range-margin-overlay">
+                    <span class="config-margin-value-overlay value-text">0</span>
                 </div>
-                <span class="config-background-color-overlay value-text">#EEEEEE</span>
+                <div class="compact-control-row">
+                    <label>底色</label>
+                    <div class="color-picker-wrapper">
+                        <input type="color" value="#EEEEEE" class="input-background-color-overlay">
+                    </div>
+                    <span class="config-background-color-overlay value-text">#EEEEEE</span>
+                </div>
+            </div>
+
+            <!-- Extract Button -->
+            <div class="action-box">
+                <button class="ui-btn extract-btn" onclick="extractCharacter()">
+                    提取动漫角色
+                </button>
+                <div class="model-status"></div>
+            </div>
+
+            <!-- Character Adjustment Group -->
+            <div class="control-group">
+                <div class="compact-control-row">
+                    <label>大小</label>
+                    <input type="range" min="10" max="200" step="5" value="100" class="input-character-scale">
+                    <span class="config-scale-value value-text">100%</span>
+                </div>
+                <div class="compact-control-row">
+                    <label>透明</label>
+                    <input type="range" min="0" max="100" step="5" value="100" class="input-character-opacity">
+                    <span class="config-opacity-value value-text">100%</span>
+                </div>
             </div>
         </div>
 
-        <!-- Extract Button -->
-        <div class="label-box" style="padding: 10px 0 4px;">
-            <button class="ui-btn extract-btn" onclick="extractCharacter()">
-                提取动漫角色
+        <div class="output-box">
+            <a class="ui-btn download-btn" target="_blank">保存对比图片</a>
+            <button class="ui-btn download-bg-btn" style="display: none;">仅保存实景合成图片</button>
+            <button class="ui-btn download-character-btn" onclick="downloadCharacter()" style="display: none;">
+                仅保存提取角色
             </button>
-            <div class="model-status" style="font-size: 12px; color: #666; margin-top: 5px;"></div>
+            <button class="ui-btn reset-btn">重新开始</button>
         </div>
 
-        <!-- Character Adjustment Group -->
-        <div class="control-group">
-            <div class="compact-control-row">
-                <label>大小</label>
-                <input type="range" min="10" max="200" step="5" value="100" class="input-character-scale">
-                <span class="config-scale-value value-text">100%</span>
-            </div>
-            <div class="compact-control-row">
-                <label>透明</label>
-                <input type="range" min="0" max="100" step="5" value="100" class="input-character-opacity">
-                <span class="config-opacity-value value-text">100%</span>
-            </div>
+        <div class="content-box">
+            <br>
+            <p>
+                在地图中寻找圣地
+                <a href="https://anitabi.cn/map" target="_blank">https://anitabi.cn</a>
+            </p>
+            <p>
+                将动漫角色放置在实拍照片中！
+            </p>
+            <p>
+                禁止商业用途，动画截图归属动画委员会
+            </p>
         </div>
-    </div>
 
-    <div class="output-box">
-        <a class="ui-btn download-btn" target="_blank">保存对比图片</a>
-        <button class="ui-btn download-bg-btn" style="display: none;">仅保存实景合成图片</button>
-        <button class="ui-btn download-character-btn" onclick="downloadCharacter()" style="display: none;">
-            仅保存提取角色
-        </button>
-        <button class="ui-btn reset-btn">重新开始</button>
-    </div>
-
-    <div class="content-box">
-        <p data-client="pc">点击或拖拽图片到对应区域上传换图</p>
-        <p data-client="phone">点击对应区域换图，长按图片也可存图</p>
-        <p>
-            在地图中寻找圣地
-            <a href="https://anitabi.cn/map" target="_blank">https://anitabi.cn</a>
-        </p>
-        <p>
-            将动漫角色放置在实拍照片中！
-        </p>
-        <p>
-            禁止商业用途，动画截图归属动画委员会
-        </p>
-    </div>
-
-    <footer>
-        <a href="https://lab.magiconch.com/image-merge/" target="_blank">本项目基于Image Merge项目开发</a>
-        <br>
-        <br>
-        <a href="https://github.com/haoyang504/Anime_In_Real" target="_blank">GitHub</a>
-    </footer>
+        <footer>
+            <a href="https://lab.magiconch.com/image-merge/" target="_blank">本项目基于Image Merge项目开发</a>
+            <br>
+            <br>
+            <a href="https://github.com/haoyang504/Anime_In_Real" target="_blank">GitHub</a>
+        </footer>
+    </main>
 
     <script type="module" src="/main.js"></script>
     <script type="module" src="/interactions.js"></script>
