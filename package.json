@@ -1,0 +1,18 @@
+{
+  "name": "anime-in-real",
+  "version": "2.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "compile-css": "lessc style.less style.css"
+  },
+  "dependencies": {
+    "@huggingface/transformers": "^3.1.0"
+  },
+  "devDependencies": {
+    "less": "^4.2.0",
+    "vite": "^5.0.0"
+  }
+}

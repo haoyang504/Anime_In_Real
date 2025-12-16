@@ -1,2 +1,24 @@
-style.css
-.vscode/settings.json
+# Dependencies
+node_modules/
+
+# Build output
+dist/
+*.css
+!style.css
+
+# Environment variables
+.env
+.env.local
+
+# IDEs
+.vscode/
+.idea/
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# System
+.DS_Store
+Thumbs.db
