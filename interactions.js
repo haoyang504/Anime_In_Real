@@ -1,4 +1,4 @@
-import { config, loadCaptureImageURL, loadCameraImageURL, drawOverlayImage, drawPlaceholderImage } from './main.js';
+import { config, loadCaptureImageURL, loadCameraImageURL, drawOverlayImage, drawPlaceholderImage, drawAiResultImage } from './main.js';
 
 const $ = document.querySelector.bind(document);
 const outputEl = $('.output-image');
@@ -17,8 +17,8 @@ const throttle = (fn, wait) => {
 
 // Click to upload
 outputEl.addEventListener('click', (clickEvent) => {
-    // Prevent upload if character is already extracted
-    if (config.extractedCharacter) {
+    // Prevent upload if character is already extracted (in local mode)
+    if (config.extractedCharacter && config.currentMode === 'local') {
         return;
     }
 
@@ -63,8 +63,8 @@ outputEl.addEventListener('drop', e => {
     e.preventDefault();
     e.stopPropagation();
 
-    // Prevent upload if character is already extracted
-    if (config.extractedCharacter) {
+    // Prevent upload if character is already extracted (in local mode)
+    if (config.extractedCharacter && config.currentMode === 'local') {
         return;
     }
 
@@ -96,8 +96,8 @@ outputEl.addEventListener('drop', e => {
 
 // Paste to upload
 document.addEventListener('paste', e => {
-    // Prevent upload if character is already extracted
-    if (config.extractedCharacter) {
+    // Prevent upload if character is already extracted (in local mode)
+    if (config.extractedCharacter && config.currentMode === 'local') {
         return;
     }
 
@@ -116,18 +116,21 @@ document.addEventListener('paste', e => {
     }
 });
 
-// Margin control
-const inputRangeMarginOverlayEl = $('.input-range-margin-overlay');
-const inputRangeValueOverlayEl = $('.config-margin-value-overlay');
+// Margin control (Synchronized across tabs)
+const bindMarginInputs = () => {
+    const inputs = document.querySelectorAll('.input-range-margin-overlay');
+    const displays = document.querySelectorAll('.config-margin-value-overlay');
 
-if (inputRangeMarginOverlayEl) {
-    inputRangeMarginOverlayEl.addEventListener('input', throttle(e => {
-        const v = +e.target.value;
-        config.margin = v;
-        inputRangeValueOverlayEl.innerText = v;
+    const updateAll = (val) => {
+        config.margin = val;
+        inputs.forEach(el => el.value = val);
+        displays.forEach(el => el.innerText = val);
 
-        if (config.extractedCharacter) {
+        // Redraw
+        if (config.currentMode === 'local' && config.extractedCharacter) {
             drawOverlayImage();
+        } else if (config.currentMode === 'ai' && config.aiResult) {
+            drawAiResultImage(config.aiResult);
         } else if (config.captureImage && config.cameraImage) {
             drawPlaceholderImage();
         } else if (config.captureImage) {
@@ -135,21 +138,31 @@ if (inputRangeMarginOverlayEl) {
         } else if (config.cameraImage) {
             loadCameraImageURL(config.cameraImage.src);
         }
-    }, 300));
-}
+    };
 
-// Background color control
-const inputBGColorOverlayEl = $('.input-background-color-overlay');
-const inputColorValueOverlayEl = $('.config-background-color-overlay');
+    inputs.forEach(input => {
+        input.addEventListener('input', throttle(e => {
+            updateAll(+e.target.value);
+        }, 300));
+    });
+};
+bindMarginInputs();
 
-if (inputBGColorOverlayEl) {
-    inputBGColorOverlayEl.addEventListener('input', throttle(e => {
-        const v = e.target.value;
-        config.background = v;
-        inputColorValueOverlayEl.innerText = v;
+// Background color control (Synchronized across tabs)
+const bindBgColorInputs = () => {
+    const inputs = document.querySelectorAll('.input-background-color-overlay');
+    const displays = document.querySelectorAll('.config-background-color-overlay');
 
-        if (config.extractedCharacter) {
+    const updateAll = (val) => {
+        config.background = val;
+        inputs.forEach(el => el.value = val);
+        displays.forEach(el => el.innerText = val);
+
+        // Redraw
+        if (config.currentMode === 'local' && config.extractedCharacter) {
             drawOverlayImage();
+        } else if (config.currentMode === 'ai' && config.aiResult) {
+            drawAiResultImage(config.aiResult);
         } else if (config.captureImage && config.cameraImage) {
             drawPlaceholderImage();
         } else if (config.captureImage) {
@@ -157,8 +170,15 @@ if (inputBGColorOverlayEl) {
         } else if (config.cameraImage) {
             loadCameraImageURL(config.cameraImage.src);
         }
-    }, 10));
-}
+    };
+
+    inputs.forEach(input => {
+        input.addEventListener('input', throttle(e => {
+            updateAll(e.target.value);
+        }, 10));
+    });
+};
+bindBgColorInputs();
 
 // Character scale control
 const inputScaleEl = $('.input-character-scale');
@@ -201,7 +221,7 @@ let charStartY = 0;
 let rafId = null;
 
 outputEl.addEventListener('mousedown', e => {
-    if (!config.extractedCharacter) return;
+    if (!config.extractedCharacter || config.currentMode !== 'local') return;
 
     isDragging = true;
     dragStartX = e.clientX;
@@ -262,8 +282,7 @@ if (downloadBtn) {
 
         const src = canvas.toDataURL('image/png', 0.9);
         const unix = +new Date();
-        const uuid = unix.toString(36);
-        const fileName = `[神奇海螺][叠加图生成器][${uuid}].png`;
+        const fileName = `AnimeInReal_Comparison_${unix}.png`;
 
         downloadBtn.download = fileName;
         downloadBtn.href = src;
@@ -331,7 +350,7 @@ if (downloadBgBtn) {
         }
 
         const link = document.createElement('a');
-        link.download = `real_scene_composite_${+new Date()}.png`;
+        link.download = `AnimeInReal_Composite_${+new Date()}.png`;
         link.href = canvas.toDataURL('image/png');
         link.click();
     });

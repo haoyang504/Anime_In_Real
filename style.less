@@ -17,7 +17,7 @@ html {
         }
 
         &::after {
-            content: '生成中…';
+            content: attr(data-loading-text);
             position: fixed;
             top: 50%;
             left: 50%;
@@ -56,7 +56,6 @@ a {
     background: #ffffff;
     width: 100%;
     max-width: 850px;
-    /* Increased width for image */
     padding: 30px;
     border-radius: 16px;
     box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05), 0 8px 10px -6px rgba(0, 0, 0, 0.01);
@@ -75,6 +74,36 @@ header {
     }
 }
 
+/* Mode Tabs */
+.mode-tabs {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    margin-bottom: 24px;
+}
+
+.tab-btn {
+    padding: 10px 20px;
+    font-size: 14px;
+    font-weight: 600;
+    border: none;
+    background: #f3f4f6;
+    color: #6b7280;
+    border-radius: 20px;
+    cursor: pointer;
+    transition: all 0.2s;
+
+    &:hover {
+        background: #e5e7eb;
+        color: #374151;
+    }
+
+    &.active {
+        background: #000;
+        color: #fff;
+    }
+}
+
 /* Image Area */
 canvas,
 .output-image {
@@ -88,11 +117,10 @@ canvas,
     object-fit: contain;
 }
 
-/* Controls - Constrained Width */
+/* Controls */
 .config-box {
     margin-bottom: 24px;
     max-width: 600px;
-    /* Constrained width */
     margin-left: auto;
     margin-right: auto;
 }
@@ -185,7 +213,46 @@ canvas,
     }
 }
 
-/* Action Box (Extract Button) */
+/* Input Groups (AI Mode) */
+.input-group {
+    margin-bottom: 15px;
+    text-align: left;
+
+    label {
+        display: block;
+        margin-bottom: 8px;
+        font-weight: 600;
+        color: #374151;
+        font-size: 14px;
+    }
+
+    input,
+    textarea {
+        width: 100%;
+        padding: 12px;
+        border: 1px solid #e5e7eb;
+        border-radius: 8px;
+        font-family: inherit;
+        font-size: 14px;
+        background: #f9fafb;
+        transition: border-color 0.2s;
+
+        &:focus {
+            outline: none;
+            border-color: #000;
+            background: #fff;
+        }
+    }
+
+    small {
+        display: block;
+        margin-top: 6px;
+        color: #6b7280;
+        font-size: 12px;
+    }
+}
+
+/* Action Box */
 .action-box {
     margin: 20px 0;
 }
@@ -197,17 +264,24 @@ canvas,
     margin-top: 8px;
 }
 
-/* Buttons - Constrained Width */
+/* Buttons */
 .output-box {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 24px;
+    max-width: 600px;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.btn-group {
     display: flex;
     flex-wrap: wrap;
     justify-content: center;
     gap: 10px;
-    margin-bottom: 24px;
-    max-width: 600px;
-    /* Constrained width */
-    margin-left: auto;
-    margin-right: auto;
+    width: 100%;
 }
 
 .ui-btn {
@@ -223,8 +297,6 @@ canvas,
     transition: all 0.2s ease;
     text-decoration: none;
     line-height: 1.4;
-
-    /* Default (Secondary) Style */
     background: #f3f4f6;
     color: #1f2937;
 
@@ -238,7 +310,6 @@ canvas,
     }
 }
 
-/* Primary Buttons */
 .extract-btn,
 .download-btn,
 .download-bg-btn,
@@ -246,8 +317,6 @@ canvas,
     background: #000000;
     color: #ffffff;
     width: 100%;
-    /* Full width on mobile/default */
-    max-width: 100%;
 
     &:hover {
         background: #333333;
@@ -261,21 +330,14 @@ canvas,
     font-size: 15px;
 }
 
-/* Reset Button */
 .reset-btn {
     background: transparent;
     color: #6b7280;
+    margin-top: 10px;
 
     &:hover {
         background: #fef2f2;
         color: #4b5563;
-
-        &:first-child {
-            font-weight: 500;
-            color: #111827;
-            margin-bottom: 12px;
-            text-align: center;
-        }
     }
 }
 
@@ -294,9 +356,80 @@ footer {
     }
 }
 
+/* Modal */
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 2000;
+    backdrop-filter: blur(4px);
+}
+
+.modal-box {
+    background: #fff;
+    padding: 24px;
+    border-radius: 16px;
+    width: 90%;
+    max-width: 400px;
+    text-align: center;
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+    animation: modalPop 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+
+    h3 {
+        margin-top: 0;
+        margin-bottom: 16px;
+        font-size: 18px;
+        color: #111827;
+    }
+
+    p {
+        color: #4b5563;
+        margin-bottom: 12px;
+        line-height: 1.5;
+    }
+
+    .warning-text {
+        color: #d97706;
+        /* Amber-600 */
+        font-weight: 600;
+        background: #fffbeb;
+        padding: 8px;
+        border-radius: 6px;
+    }
+}
+
+.modal-actions {
+    display: flex;
+    gap: 12px;
+    margin-top: 24px;
+    justify-content: flex-end;
+
+    button {
+        flex: 1;
+    }
+}
+
+@keyframes modalPop {
+    from {
+        opacity: 0;
+        transform: scale(0.95);
+    }
+
+    to {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
 /* Responsive */
 @media (min-width: 600px) {
-    .output-box {
+    .btn-group {
         flex-direction: row;
     }
 

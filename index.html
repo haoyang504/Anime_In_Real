@@ -15,10 +15,16 @@
             <h1>圣地巡礼角色实景合成器</h1>
         </header>
 
+        <!-- Mode Tabs -->
+        <div class="mode-tabs">
+            <button class="tab-btn active" data-mode="local">本地提取</button>
+            <button class="tab-btn" data-mode="ai">AI 生成 (Nano Banana Pro 🍌)</button>
+        </div>
+
         <img class="output-image">
 
-        <!-- Overlay Mode Controls -->
-        <div class="config-box overlay-controls">
+        <!-- Local Mode Controls -->
+        <div id="controls-local" class="config-box">
             <!-- Image Settings Group -->
             <div class="control-group">
                 <div class="compact-control-row">
@@ -38,7 +44,7 @@
             <!-- Extract Button -->
             <div class="action-box">
                 <button class="ui-btn extract-btn" onclick="extractCharacter()">
-                    提取动漫角色
+                    提取角色
                 </button>
                 <div class="model-status"></div>
             </div>
@@ -58,12 +64,73 @@
             </div>
         </div>
 
+        <!-- AI Mode Controls -->
+        <div id="controls-ai" class="config-box" style="display: none;">
+            <!-- Image Settings Group (Shared) -->
+            <div class="control-group">
+                <div class="compact-control-row">
+                    <label>边框</label>
+                    <input type="range" min="0" max="100" step="1" value="0" class="input-range-margin-overlay">
+                    <span class="config-margin-value-overlay value-text">0</span>
+                </div>
+                <div class="compact-control-row">
+                    <label>底色</label>
+                    <div class="color-picker-wrapper">
+                        <input type="color" value="#EEEEEE" class="input-background-color-overlay">
+                    </div>
+                    <span class="config-background-color-overlay value-text">#EEEEEE</span>
+                </div>
+            </div>
+
+            <div class="control-group">
+                <div class="input-group">
+                    <label for="gemini-api-key">Google AI Studio API Key <a
+                            href="https://ai.google.dev/gemini-api/docs/pricing?hl=zh-cn#gemini-3-pro-image-preview"
+                            target="_blank">（生成一张图片约$0.24美元）</a></label>
+                    <input type="password" id="gemini-api-key" placeholder="请输入您的 Google AI Studio API Key">
+                    <small><a href="https://aistudio.google.com/app/apikey" target="_blank">如何获取 API
+                            Key</a></small>
+                </div>
+                <div class="input-group">
+                    <label for="gemini-prompt">提示词（Prompt）</label>
+                    <textarea id="gemini-prompt" rows="8">You are an expert image compositor. Task: Extract the anime character from the first image and composite it seamlessly into the second background image. 
+Requirements:
+1. Precise segmentation of the character.
+2. Adjust lighting, shadows, and color tone of the character to match the background environment perfectly.
+3. Maintain the character's original design and details.
+4. Output ONLY the final composite image.</textarea>
+                </div>
+            </div>
+
+            <div class="action-box">
+                <button class="ui-btn extract-btn" id="start-ai-gen-btn">
+                    开始 AI 生成
+                </button>
+                <div id="ai-status" class="model-status"></div>
+            </div>
+        </div>
+
         <div class="output-box">
-            <a class="ui-btn download-btn" target="_blank">保存对比图片</a>
-            <button class="ui-btn download-bg-btn" style="display: none;">仅保存实景合成图片</button>
-            <button class="ui-btn download-character-btn" onclick="downloadCharacter()" style="display: none;">
-                仅保存提取角色
-            </button>
+            <!-- Local Mode Buttons -->
+            <div id="btns-local" class="btn-group">
+                <a class="ui-btn download-btn" target="_blank">保存对比图片</a>
+                <button class="ui-btn download-bg-btn" style="display: none;">仅保存实景合成图片</button>
+                <button class="ui-btn download-character-btn" onclick="downloadCharacter()" style="display: none;">
+                    仅保存提取角色
+                </button>
+                <button class="ui-btn secondary-btn" id="switch-to-ai-btn" style="display: none;">
+                    对结果不满意？尝试 AI 生成
+                </button>
+            </div>
+
+            <!-- AI Mode Buttons -->
+            <div id="btns-ai" class="btn-group" style="display: none;">
+                <button id="download-ai-comparison-btn" class="ui-btn download-btn"
+                    style="display: none;">保存对比图片</button>
+                <button id="download-ai-result-btn" class="ui-btn download-bg-btn"
+                    style="display: none;">仅保存实景生成图片</button>
+            </div>
+
             <button class="ui-btn reset-btn">重新开始</button>
         </div>
 
@@ -74,10 +141,10 @@
                 <a href="https://anitabi.cn/map" target="_blank">https://anitabi.cn</a>
             </p>
             <p>
-                将动漫角色放置在实景照片中！
+                将动漫角色放置在实拍照片中！
             </p>
             <p>
-                禁止商业用途，动画实景截图归属动画委员会
+                禁止商业用途，动画截图归属动画委员会
             </p>
         </div>
 
@@ -88,6 +155,20 @@
             <a href="https://github.com/haoyang504/Anime_In_Real" target="_blank">GitHub</a>
         </footer>
     </main>
+
+    <!-- Confirmation Modal -->
+    <div id="confirm-modal" class="modal-overlay" style="display: none;">
+        <div class="modal-box">
+            <h3>确认生成？</h3>
+            <p>此功能需要使用您自己的 Google AI Studio API Key</p>
+            <p class="warning-text">⚠️ 生成一张图片约需花费 $0.24 美元</p>
+            <div class="modal-actions">
+                <button id="cancel-gen-btn" class="ui-btn secondary-btn"
+                    style="background: #f3f4f6; color: #1f2937;">取消</button>
+                <button id="confirm-gen-btn" class="ui-btn extract-btn">确认生成</button>
+            </div>
+        </div>
+    </div>
 
     <script type="module" src="/main.js"></script>
     <script type="module" src="/interactions.js"></script>

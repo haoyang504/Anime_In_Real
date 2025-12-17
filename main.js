@@ -1,4 +1,5 @@
 import ISNetManager from './isnet-manager.js';
+import { geminiClient } from './api-client.js';
 
 // DOM Elements
 const $ = document.querySelector.bind(document);
@@ -6,6 +7,17 @@ const canvas = document.createElement('canvas');
 const ctx = canvas.getContext('2d');
 const outputImageEl = $('.output-image');
 const htmlEl = document.documentElement;
+
+// Helper to convert Image object to Base64 (JPEG)
+const imageToBase64 = (img) => {
+    const tempCanvas = document.createElement('canvas');
+    tempCanvas.width = img.naturalWidth;
+    tempCanvas.height = img.naturalHeight;
+    const tempCtx = tempCanvas.getContext('2d');
+    tempCtx.drawImage(img, 0, 0);
+    // Return base64 without prefix for API
+    return tempCanvas.toDataURL('image/jpeg', 0.9).split(',')[1];
+};
 
 // IS-Net Manager
 const isnetManager = new ISNetManager();
@@ -24,11 +36,14 @@ const config = {
     characterY: 0,
     characterScale: 1.0,
     characterOpacity: 1.0,
+    currentMode: 'local', // 'local' or 'ai'
+    aiResult: null // Store AI result image
 };
 
 // Loading indicators
-const loadingStart = () => {
+const loadingStart = (text = '生成中…') => {
     htmlEl.setAttribute('data-loading', 'true');
+    htmlEl.setAttribute('data-loading-text', text);
 };
 
 const loadingStop = () => {
@@ -37,9 +52,13 @@ const loadingStop = () => {
 
 // Image loading utilities
 const loadImageByURL = (url, onLoad) => {
-    loadingStart();
+    loadingStart('加载中…');
     const img = new Image();
     img.onload = () => onLoad(img);
+    img.onerror = () => {
+        console.error('Failed to load image:', url);
+        loadingStop();
+    };
     img.crossOrigin = 'anonymous';
     img.src = url;
 };
@@ -49,8 +68,10 @@ const loadCaptureImageURL = url => {
         config.captureImage = img;
 
         if (config.cameraImage) {
-            if (config.extractedCharacter) {
+            if (config.currentMode === 'local' && config.extractedCharacter) {
                 drawOverlayImage();
+            } else if (config.currentMode === 'ai' && config.aiResult) {
+                drawAiResultImage(config.aiResult);
             } else {
                 drawPlaceholderImage();
             }
@@ -95,8 +116,10 @@ const loadCameraImageURL = url => {
         config.cameraImage = img;
 
         if (config.captureImage) {
-            if (config.extractedCharacter) {
+            if (config.currentMode === 'local' && config.extractedCharacter) {
                 drawOverlayImage();
+            } else if (config.currentMode === 'ai' && config.aiResult) {
+                drawAiResultImage(config.aiResult);
             } else {
                 drawPlaceholderImage();
             }
@@ -259,6 +282,61 @@ const drawPlaceholderImage = () => {
     generateImage();
 };
 
+// Draw AI Result Image (Top: Screenshot, Bottom: AI Result)
+const drawAiResultImage = (aiResultImg) => {
+    if (!config.captureImage) return;
+
+    config.aiResult = aiResultImg;
+    loadingStart();
+
+    const captureImg = config.captureImage;
+    // Use AI result as the bottom image
+    const bottomImg = aiResultImg;
+
+    const { naturalWidth, naturalHeight } = captureImg;
+    const rate = naturalWidth / naturalHeight;
+
+    const imgWidth = config.height * rate;
+    const imgHeight = config.height;
+    const outputWidth = imgWidth + config.margin * 2;
+    const outputHeight = imgHeight * 2 + config.margin * 3;
+
+    canvas.width = outputWidth;
+    canvas.height = outputHeight;
+    outputImageEl.style.aspectRatio = outputWidth / outputHeight;
+
+    ctx.fillStyle = config.background;
+    ctx.fillRect(0, 0, outputWidth, outputHeight);
+
+    // Draw top half (screenshot)
+    ctx.drawImage(captureImg, config.margin, config.margin, imgWidth, imgHeight);
+
+    // Draw bottom half (AI Result)
+    const bottomRate = bottomImg.naturalWidth / bottomImg.naturalHeight;
+    let drawWidth, drawHeight, offsetX, offsetY;
+
+    if (bottomRate > rate) {
+        drawWidth = bottomImg.naturalHeight * rate;
+        drawHeight = bottomImg.naturalHeight;
+        offsetX = (bottomImg.naturalWidth - drawWidth) / 2;
+        offsetY = 0;
+    } else {
+        drawWidth = bottomImg.naturalWidth;
+        drawHeight = bottomImg.naturalWidth / rate;
+        offsetX = 0;
+        offsetY = (bottomImg.naturalHeight - drawHeight) / 2;
+    }
+
+    ctx.drawImage(
+        bottomImg,
+        offsetX, offsetY, drawWidth, drawHeight,
+        config.margin, imgHeight + config.margin * 2, imgWidth, imgHeight
+    );
+
+    loadingStop();
+    generateImage();
+};
+
 // Overlay image with extracted character
 const drawOverlayImage = () => {
     if (!config.cameraImage) {
@@ -379,7 +457,7 @@ const extractCharacter = async () => {
     try {
         // Load model if needed
         if (!isnetManager.isLoaded) {
-            loadingStart();
+            loadingStart('加载模型中…');
             if (statusEl) {
                 await isnetManager.loadModel((status) => {
                     statusEl.textContent = status;
@@ -393,7 +471,7 @@ const extractCharacter = async () => {
 
         // Extract character
         if (statusEl) statusEl.textContent = '正在提取角色...';
-        loadingStart();
+        loadingStart('提取角色中…');
         config.extractedCharacter = await isnetManager.extractCharacter(config.captureImage);
 
         // Calculate bounding box
@@ -426,6 +504,11 @@ const extractCharacter = async () => {
         const downloadBgBtn = document.querySelector('.download-bg-btn');
         if (downloadBgBtn) {
             downloadBgBtn.style.display = 'inline-block';
+        }
+
+        const switchToAiBtn = document.querySelector('#switch-to-ai-btn');
+        if (switchToAiBtn) {
+            switchToAiBtn.style.display = 'inline-block';
         }
 
         // Update status
@@ -474,13 +557,178 @@ const downloadCharacter = () => {
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
         const unix = +new Date();
-        const uuid = unix.toString(36);
-        a.download = `[神奇海螺][提取角色][${uuid}].png`;
+        a.download = `AnimeInReal_Character_${unix}.png`;
         a.href = url;
         a.click();
         URL.revokeObjectURL(url);
     }, 'image/png');
 };
+
+// --- Dual Mode Logic ---
+
+const apiKeyInput = $('#gemini-api-key');
+const promptInput = $('#gemini-prompt');
+const aiStatusEl = $('#ai-status');
+const downloadAiComparisonBtn = $('#download-ai-comparison-btn');
+const downloadAiResultBtn = $('#download-ai-result-btn');
+const confirmModal = $('#confirm-modal');
+const confirmBtn = $('#confirm-gen-btn');
+const cancelBtn = $('#cancel-gen-btn');
+
+// Load saved API Key
+const savedKey = localStorage.getItem('gemini_api_key');
+if (savedKey) {
+    apiKeyInput.value = savedKey;
+}
+
+// Save API Key on change
+apiKeyInput.addEventListener('change', () => {
+    localStorage.setItem('gemini_api_key', apiKeyInput.value.trim());
+});
+
+// Switch Mode
+const switchMode = (mode) => {
+    config.currentMode = mode;
+
+    // Update Tabs
+    document.querySelectorAll('.tab-btn').forEach(btn => {
+        if (btn.dataset.mode === mode) {
+            btn.classList.add('active');
+        } else {
+            btn.classList.remove('active');
+        }
+    });
+
+    // Update Controls
+    const localControls = $('#controls-local');
+    const aiControls = $('#controls-ai');
+    const localBtns = $('#btns-local');
+    const aiBtns = $('#btns-ai');
+
+    if (mode === 'local') {
+        localControls.style.display = 'block';
+        aiControls.style.display = 'none';
+        localBtns.style.display = 'flex';
+        aiBtns.style.display = 'none';
+
+        // Restore extracted character view if available
+        if (config.extractedCharacter && config.captureImage && config.cameraImage) {
+            drawOverlayImage();
+        } else if (config.captureImage && config.cameraImage) {
+            drawPlaceholderImage();
+        }
+    } else {
+        localControls.style.display = 'none';
+        aiControls.style.display = 'block';
+        localBtns.style.display = 'none';
+        aiBtns.style.display = 'flex';
+
+        // Show AI result if available, otherwise placeholder
+        if (config.aiResult && config.captureImage) {
+            drawAiResultImage(config.aiResult);
+        } else if (config.captureImage && config.cameraImage) {
+            drawPlaceholderImage();
+        }
+    }
+};
+
+// Tab Event Listeners
+document.querySelectorAll('.tab-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+        switchMode(btn.dataset.mode);
+    });
+});
+
+// Switch to AI Button
+$('#switch-to-ai-btn')?.addEventListener('click', () => {
+    switchMode('ai');
+});
+
+// Start AI Generation (Click -> Show Modal)
+$('#start-ai-gen-btn')?.addEventListener('click', () => {
+    const apiKey = apiKeyInput.value.trim();
+    if (!apiKey) {
+        alert('Please enter your Google AI Studio API Key');
+        return;
+    }
+
+    if (!config.captureImage || !config.cameraImage) {
+        alert('Missing images');
+        return;
+    }
+
+    // Show Modal
+    if (confirmModal) confirmModal.style.display = 'flex';
+});
+
+// Cancel
+cancelBtn?.addEventListener('click', () => {
+    if (confirmModal) confirmModal.style.display = 'none';
+});
+
+// Confirm -> Actually Generate
+confirmBtn?.addEventListener('click', async () => {
+    if (confirmModal) confirmModal.style.display = 'none';
+
+    // UI State: Loading
+    loadingStart('AI 生成中…');
+    if (aiStatusEl) aiStatusEl.textContent = '正在请求 Gemini 生成...';
+    $('#start-ai-gen-btn').disabled = true;
+    if (downloadAiComparisonBtn) downloadAiComparisonBtn.style.display = 'none';
+    if (downloadAiResultBtn) downloadAiResultBtn.style.display = 'none';
+
+    try {
+        const apiKey = apiKeyInput.value.trim();
+        const animeBase64 = imageToBase64(config.captureImage);
+        const bgBase64 = imageToBase64(config.cameraImage);
+        const prompt = promptInput.value.trim();
+
+        const resultBase64 = await geminiClient.generateCompositeImage(apiKey, animeBase64, bgBase64, prompt);
+
+        // Display Result as composite
+        const resultUrl = `data:image/jpeg;base64,${resultBase64}`;
+        const aiImg = new Image();
+        aiImg.onload = () => {
+            drawAiResultImage(aiImg);
+
+            // Show buttons
+            if (downloadAiComparisonBtn) downloadAiComparisonBtn.style.display = 'inline-flex';
+            if (downloadAiResultBtn) downloadAiResultBtn.style.display = 'inline-flex';
+
+            if (aiStatusEl) aiStatusEl.textContent = '✓ 生成成功！';
+        };
+        aiImg.src = resultUrl;
+
+    } catch (error) {
+        if (aiStatusEl) {
+            aiStatusEl.textContent = '✗ 生成失败: ' + error.message;
+            aiStatusEl.style.color = '#f44336';
+        } else {
+            alert('AI 生成失败: ' + error.message);
+        }
+    } finally {
+        loadingStop();
+        $('#start-ai-gen-btn').disabled = false;
+    }
+});
+
+// AI Download Listeners
+downloadAiComparisonBtn?.addEventListener('click', () => {
+    const url = canvas.toDataURL('image/png', 0.9);
+    const a = document.createElement('a');
+    a.download = `AnimeInReal_AI_Comparison_${+new Date()}.png`;
+    a.href = url;
+    a.click();
+});
+
+downloadAiResultBtn?.addEventListener('click', () => {
+    if (!config.aiResult) return;
+    const url = config.aiResult.src;
+    const a = document.createElement('a');
+    a.download = `AnimeInReal_AI_Result_${+new Date()}.png`;
+    a.href = url;
+    a.click();
+});
 
 // Export functions for global access
 window.extractCharacter = extractCharacter;
@@ -493,5 +741,6 @@ export {
     loadCameraImageURL,
     extractCharacter,
     drawOverlayImage,
-    drawPlaceholderImage
+    drawPlaceholderImage,
+    drawAiResultImage
 };
