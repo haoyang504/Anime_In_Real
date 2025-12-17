@@ -17,6 +17,9 @@ const throttle = (fn, wait) => {
 
 // Click to upload
 outputEl.addEventListener('click', (clickEvent) => {
+    // Prevent upload if in AI mode AND result exists
+    if (config.currentMode === 'ai' && config.aiResult) return;
+
     // Prevent upload if character is already extracted (in local mode)
     if (config.extractedCharacter && config.currentMode === 'local') {
         return;
@@ -63,6 +66,9 @@ outputEl.addEventListener('drop', e => {
     e.preventDefault();
     e.stopPropagation();
 
+    // Prevent upload if in AI mode AND result exists
+    if (config.currentMode === 'ai' && config.aiResult) return;
+
     // Prevent upload if character is already extracted (in local mode)
     if (config.extractedCharacter && config.currentMode === 'local') {
         return;
@@ -96,6 +102,9 @@ outputEl.addEventListener('drop', e => {
 
 // Paste to upload
 document.addEventListener('paste', e => {
+    // Prevent upload if in AI mode
+    if (config.currentMode === 'ai') return;
+
     // Prevent upload if character is already extracted (in local mode)
     if (config.extractedCharacter && config.currentMode === 'local') {
         return;
