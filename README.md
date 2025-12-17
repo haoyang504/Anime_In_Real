@@ -12,7 +12,7 @@
 
 ### 2. AI 生成 (Nano Banana Pro) 🍌
 > [!IMPORTANT]
-> 此功能需要使用您自己的 Google AI Studio API Key，且生成图片会产生费用（约 $0.24/张）。
+> 此功能需要使用您自己的 Google AI Studio API Key，且生成图片会产生费用（约 $0.24美元/张）。
 
 *   **智能融合**：利用 Nano Banana Pro 的强大多模态能力，将动漫角色与实景背景自然融合。
 *   **光影适配**：AI 自动调整角色的光影和色调，使其与环境更协调。
