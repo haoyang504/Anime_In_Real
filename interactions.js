@@ -367,4 +367,4 @@ if (downloadBgBtn) {
 
 // Load default image
 const urlParams = new URLSearchParams(window.location.search);
-loadCaptureImageURL(urlParams.get('url') || '7eyih3xg.jpg');
+loadCaptureImageURL(urlParams.get('url') || 'example.jpg');

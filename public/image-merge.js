@@ -7,27 +7,27 @@ const ctx = canvas.getContext('2d');
 
 const outputImageEl = $('.output-image');
 
-const loadImageByURL = (url,onLoad)=>{
+const loadImageByURL = (url, onLoad) => {
     loadingStart();
     const img = new Image();
-    img.onload = ()=>onLoad(img);
+    img.onload = () => onLoad(img);
     img.crossOrigin = 'anonymous';
     img.src = url;
 };
-const loadCaptureImageURL = url=>{
-    loadImageByURL(url,img=>{
+const loadCaptureImageURL = url => {
+    loadImageByURL(url, img => {
         config.captureImage = img;
 
         // 判断截图图片的宽高比，以确定合成图片的方向
         const { naturalWidth, naturalHeight } = img;
         const rate = naturalWidth / naturalHeight;
         setDirection(rate < 1 ? 'horizontal' : 'vertical');
-        
+
         // drawMergeImage();
     });
 };
-const loadCameraImageURL = url=>{
-    loadImageByURL(url,img=>{
+const loadCameraImageURL = url => {
+    loadImageByURL(url, img => {
         config.cameraImage = img;
         drawMergeImage();
     });
@@ -44,15 +44,15 @@ const config = {
 };
 
 const htmlEl = document.documentElement;
-const loadingStart = ()=>{
-    htmlEl.setAttribute('data-loading','true');
+const loadingStart = () => {
+    htmlEl.setAttribute('data-loading', 'true');
 };
-const loadingStop = ()=>{
-    htmlEl.setAttribute('data-loading','false');
+const loadingStop = () => {
+    htmlEl.setAttribute('data-loading', 'false');
 };
 
 // 生成图片链接
-const generateImage = ()=>{
+const generateImage = () => {
     const url = getCanvasURL();
     outputImageEl.src = url;
 }
@@ -60,8 +60,8 @@ const generateImage = ()=>{
 
 const outputEl = outputImageEl; // canvas
 
-const drawMergeImage = ()=>{
-    if(!config.captureImage){
+const drawMergeImage = () => {
+    if (!config.captureImage) {
         alert('截图图片不能为空');
         return;
     }
@@ -94,7 +94,7 @@ const drawMergeImage = ()=>{
     outputEl.style.aspectRatio = outputWidth / outputHeight;
 
     ctx.fillStyle = config.background;
-    ctx.fillRect(0,0,outputWidth,outputHeight);
+    ctx.fillRect(0, 0, outputWidth, outputHeight);
 
     // 绘制截图
 
@@ -118,7 +118,7 @@ const drawMergeImage = ()=>{
     );
 
 
-    if(!config.cameraImage){
+    if (!config.cameraImage) {
         ctx.font = '48px sans-serif';
         ctx.fillStyle = '#999';
         ctx.textAlign = 'center';
@@ -132,7 +132,7 @@ const drawMergeImage = ()=>{
             drawTextLeft = outputWidth * 0.75;
             drawTextTop = outputHeight / 2;
         }
-        
+
         ctx.fillText(
             '点选或拖拽上传照片',
             drawTextLeft,
@@ -145,7 +145,7 @@ const drawMergeImage = ()=>{
     }
 
     const {
-        naturalWidth : cameraImageNaturalWidth,
+        naturalWidth: cameraImageNaturalWidth,
         naturalHeight: cameraImageNaturalHeight
     } = config.cameraImage;
 
@@ -193,8 +193,8 @@ const drawMergeImage = ()=>{
 
 
 
-outputEl.addEventListener('click',e=>{
-    if(e.button!=0) return;
+outputEl.addEventListener('click', e => {
+    if (e.button != 0) return;
     console.log(e);
 
     const { clientX, clientY } = e;
@@ -202,20 +202,20 @@ outputEl.addEventListener('click',e=>{
     const rect = outputEl.getBoundingClientRect();
 
     let isCapture = false;
-    if(config.direction === 'vertical'){ // 竖直方向
+    if (config.direction === 'vertical') { // 竖直方向
         const top = clientY - rect.top;
         isCapture = (rect.height / 2 - top) > 0;
-    }else{
+    } else {
         const left = clientX - rect.left;
         isCapture = (rect.width / 2 - left) > 0;
     }
 
-    chooseFile(file=>{
+    chooseFile(file => {
         console.log(file);
-        getSrcByFile(file,src=>{
-            if(isCapture){
+        getSrcByFile(file, src => {
+            if (isCapture) {
                 loadCaptureImageURL(src);
-            }else{
+            } else {
                 loadCameraImageURL(src);
             }
         });
@@ -223,36 +223,36 @@ outputEl.addEventListener('click',e=>{
 });
 
 
-const throttle = (fn,wait)=>{
+const throttle = (fn, wait) => {
     let timer = null;
-    return (...args)=>{
-        if(timer) return;
-        timer = setTimeout(()=>{
+    return (...args) => {
+        if (timer) return;
+        timer = setTimeout(() => {
             fn(...args);
             timer = null;
         }
-        ,wait);
+            , wait);
     };
 };
 
 const inputRangeMarginEl = $('.input-range-margin');
 const inputRangeValueEl = $('.config-margin-value');
-inputRangeMarginEl.addEventListener('input',throttle(e=>{
+inputRangeMarginEl.addEventListener('input', throttle(e => {
     const v = +e.target.value;
     config.margin = v;
     inputRangeValueEl.innerText = v;
 
     drawMergeImage();
-},300));
+}, 300));
 
 const inputBGColorEl = $('.input-background-color');
 const inputColorValueEl = $('.config-background-color');
-inputBGColorEl.addEventListener('input',throttle(e=>{
+inputBGColorEl.addEventListener('input', throttle(e => {
     const v = e.target.value;
     config.background = v;
     inputColorValueEl.innerText = v;
     drawMergeImage();
-},10));
+}, 10));
 
 
 
@@ -262,28 +262,28 @@ const input = document.createElement('input');
 input.type = 'file';
 input.accept = 'image/*';
 form.appendChild(input);
-const chooseFile = (onOver)=>{
+const chooseFile = (onOver) => {
     form.reset();
     input.click();
-    input.oninput = e=>{
+    input.oninput = e => {
         const file = input.files[0];
-        if(!file) return;
+        if (!file) return;
         onOver(file);
     };
 };
 
 
-const getSrcByFile = (file,onOver)=>{
+const getSrcByFile = (file, onOver) => {
     tryEXIF(file);
 
-    if(['image/heic','image/heif'].includes(file.type)){
+    if (['image/heic', 'image/heif'].includes(file.type)) {
         alert('HEIC/HEIF 格式的图片暂不支持，请转换为 JPG 格式');
         return;
     }
-    
+
     return onOver(URL.createObjectURL(file));
     const reader = new FileReader();
-    reader.onload = e=>{
+    reader.onload = e => {
         const src = reader.result;
         onOver(src);
     };
@@ -292,7 +292,7 @@ const getSrcByFile = (file,onOver)=>{
 
 
 const urlParams = new URLSearchParams(window.location.search)
-loadCaptureImageURL(urlParams.get('url') || '7eyih3xg.jpg');
+loadCaptureImageURL(urlParams.get('url') || 'example.jpg');
 
 
 // 来自动画巡礼的来源可能会带这些参数用于地标纠正统计
@@ -301,33 +301,33 @@ const bid = urlParams.get('bid');
 const g = urlParams.get('g');
 
 
-const loadScript = (src,resolve)=>{
+const loadScript = (src, resolve) => {
     const script = document.createElement('script');
     script.src = src;
     script.onload = resolve;
     document.head.appendChild(script);
 }
 
-const getDateFromEXIF = (exif,EXIF)=>{
+const getDateFromEXIF = (exif, EXIF) => {
     // 获取照片的拍摄时间
     const date = (
         EXIF.getTag(exif, 'DateTime') ||
         EXIF.getTag(exif, 'DateTimeOriginal') ||
         EXIF.getTag(exif, 'DateTimeDigitized')
     );
-    if(!date) return;
+    if (!date) return;
 
     return date;
     // 获取时间戳失败
 }
 
-const getSecondFromEXIF = (exif,EXIF)=>{
+const getSecondFromEXIF = (exif, EXIF) => {
     // 把 getDateFromEXIF 的结果转换成秒数
-    const date = getDateFromEXIF(exif,EXIF);
-    if(!date) return -1;
+    const date = getDateFromEXIF(exif, EXIF);
+    if (!date) return -1;
 
     const match = date.match(/^(\d{4}):(\d{2}):(\d{2}) (\d{2}):(\d{2}):(\d{2})$/);
-    if(!match) return -1;
+    if (!match) return -1;
     const year = +match[1];
     const month = +match[2];
     const day = +match[3];
@@ -344,14 +344,14 @@ const getSecondFromEXIF = (exif,EXIF)=>{
     return s;
 }
 
-const getRFromEXIF = (exif,EXIF)=>{
+const getRFromEXIF = (exif, EXIF) => {
     // 获取照片的拍摄方向 海拔高度 仰角
     return Number(EXIF.getTag(exif, 'GPSImgDirection')) || -1;
 }
 
-const loadEXIFJS = (cb)=>{
-    if(window.exifr) return cb(window.exifr);
-    loadScript('exifr.7.1.3.lite.legacy.umd.min.js',()=>{
+const loadEXIFJS = (cb) => {
+    if (window.exifr) return cb(window.exifr);
+    loadScript('exifr.7.1.3.lite.legacy.umd.min.js', () => {
         cb(window.exifr);
     });
 }
@@ -360,24 +360,24 @@ const loadEXIFJS = (cb)=>{
 // GPS 精度1m
 const GPS_ACCURACY = 100000;
 
-const tryEXIF = file=>{
-    if(!pid) return;
-    if(!bid) return;
-    if(!g) return;
+const tryEXIF = file => {
+    if (!pid) return;
+    if (!bid) return;
+    if (!g) return;
 
     // 经纬度
-    const xy = g.split(',').map(v=>+v);
+    const xy = g.split(',').map(v => +v);
 
-    loadEXIFJS(exifr=>{
-        if(!exifr) return;
+    loadEXIFJS(exifr => {
+        if (!exifr) return;
 
         exifr.parse(file).then((exif) => {
-            console.log('exif',exif);
-            if(!exif) return;
+            console.log('exif', exif);
+            if (!exif) return;
             const lat = Math.round(exif.latitude * GPS_ACCURACY) / GPS_ACCURACY;
             const lng = Math.round(exif.longitude * GPS_ACCURACY) / GPS_ACCURACY;
 
-            if(!lat || !lng) return;
+            if (!lat || !lng) return;
 
             // 计算地标距离
             const distance = Math.sqrt(Math.pow(lat - xy[0], 2) + Math.pow(lng - xy[1], 2));
@@ -386,8 +386,8 @@ const tryEXIF = file=>{
 
 
             // 获取拍摄时间
-            const s = Math.floor( +exif.CreateDate / 1000 );
-            
+            const s = Math.floor(+exif.CreateDate / 1000);
+
             // 获取拍摄方向
             const direction = Math.round(exif.GPSImgDirection || -1);
 
@@ -413,31 +413,31 @@ const tryEXIF = file=>{
 
 
 // 提交地标GPS修正记录
-const subPointGPS = (data)=>{
-    submitLog('pg',data);
+const subPointGPS = (data) => {
+    submitLog('pg', data);
 }
 
-const submitLog = (name,data)=>{
+const submitLog = (name, data) => {
     const body = JSON.stringify(data);
     const url = `https://hk.anitabi.cn/api/log/${name}?data=${encodeURIComponent(body)}`;
     (new Image()).src = url;
 }
 
 
-const getCanvasImageFile = onOver=>{
-    canvas.toBlob(onOver,'image/jpeg',0.9);
+const getCanvasImageFile = onOver => {
+    canvas.toBlob(onOver, 'image/jpeg', 0.9);
 };
 
-const getCanvasURL = ()=>{
-    return canvas.toDataURL('image/jpeg',0.9);
+const getCanvasURL = () => {
+    return canvas.toDataURL('image/jpeg', 0.9);
 };
-const getFileName = ()=>{
+const getFileName = () => {
     const unix = +new Date();
     const uuid = unix.toString(36);
     return `[神奇海螺][对比图生成器][${uuid}].jpg`;
 };
 
-const saveImage = ()=>{
+const saveImage = () => {
     const src = getCanvasURL();
     const fileName = getFileName();
     downloadBtn.download = fileName;
@@ -445,27 +445,27 @@ const saveImage = ()=>{
 };
 
 const downloadBtn = $('.download-btn');
-downloadBtn.addEventListener('click',saveImage);
+downloadBtn.addEventListener('click', saveImage);
 
 
 const shareBtn = $('.share-btn');
 
-if(!navigator.share){
+if (!navigator.share) {
     shareBtn.style.display = 'none';
 }
-shareBtn.addEventListener('click',async ()=>{
+shareBtn.addEventListener('click', async () => {
     const fileName = getFileName();
-    getCanvasImageFile(async blob=>{
+    getCanvasImageFile(async blob => {
 
-        if(!navigator.canShare) return;
-        const file = new File([blob],fileName,{
+        if (!navigator.canShare) return;
+        const file = new File([blob], fileName, {
             type: 'image/jpeg'
         });
         console.log(file)
         const files = [file];
         const canShare = navigator.canShare({ files });
-        console.log(file,canShare);
-        if(!canShare) return;
+        console.log(file, canShare);
+        if (!canShare) return;
 
         navigator.share({
             title: fileName,
@@ -495,15 +495,15 @@ document.addEventListener('drop', e => {
     document.body.style.backgroundColor = '';
 
     const file = e.dataTransfer.files[0];
-    if(!file) return;
+    if (!file) return;
 
 
     const { clientX, clientY } = e;
 
     const rect = outputEl.getBoundingClientRect();
-    
+
     let isCapture = false;
-    if(config.direction === 'vertical'){ // 竖直方向
+    if (config.direction === 'vertical') { // 竖直方向
         const top = clientY - rect.top;
         isCapture = (rect.height / 2 - top) > 0;
     } else {
@@ -511,7 +511,7 @@ document.addEventListener('drop', e => {
         isCapture = (rect.width / 2 - left) > 0;
     }
 
-    console.log(clientY,rect,isCapture)
+    console.log(clientY, rect, isCapture)
 
     getSrcByFile(file, src => {
         if (isCapture) {
@@ -524,21 +524,21 @@ document.addEventListener('drop', e => {
 
 
 
-const updateDirection = ()=>{
+const updateDirection = () => {
     const tabEls = document.querySelectorAll('.ui-tab[v-model="config.direction"]');
-    tabEls.forEach(el=>{
+    tabEls.forEach(el => {
         const value = el.getAttribute('value');
-        el.setAttribute('data-checked',value === config.direction);
+        el.setAttribute('data-checked', value === config.direction);
     });
 };
 updateDirection();
-const setDirection = value=>{
+const setDirection = value => {
     config.direction = value;
     updateDirection();
     drawMergeImage();
 }
 
-const setDirectionByEl = el=>{
+const setDirectionByEl = el => {
     const value = el.getAttribute('value');
     setDirection(value);
 }
