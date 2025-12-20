@@ -1,4 +1,5 @@
 import { config, loadCaptureImageURL, loadCameraImageURL, drawOverlayImage, drawPlaceholderImage, drawAiResultImage } from './main.js';
+import { t } from './i18n.js';
 
 const $ = document.querySelector.bind(document);
 const outputEl = $('.output-image');
@@ -314,7 +315,7 @@ const downloadBgBtn = document.querySelector('.download-bg-btn');
 if (downloadBgBtn) {
     downloadBgBtn.addEventListener('click', () => {
         if (!config.cameraImage) {
-            alert('请先上传实拍照片');
+            alert(t('msg.upload_photo_first'));
             return;
         }
 

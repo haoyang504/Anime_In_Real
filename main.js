@@ -1,5 +1,6 @@
 import ISNetManager from './isnet-manager.js';
 import { geminiClient } from './api-client.js';
+import { initI18n, setLang, getLang, t } from './i18n.js';
 
 // DOM Elements
 const $ = document.querySelector.bind(document);
@@ -7,6 +8,26 @@ const canvas = document.createElement('canvas');
 const ctx = canvas.getContext('2d');
 const outputImageEl = $('.output-image');
 const htmlEl = document.documentElement;
+
+// Initialize i18n
+initI18n();
+
+// Language Toggle
+const langToggleBtn = document.getElementById('lang-toggle');
+if (langToggleBtn) {
+    langToggleBtn.addEventListener('click', () => {
+        const current = getLang();
+        const next = current === 'zh-CN' ? 'en-US' : 'zh-CN';
+        setLang(next);
+
+        // Redraw canvas text if needed
+        if (!config.cameraImage && config.captureImage) {
+            loadCaptureImageURL(config.captureImage.src);
+        } else if (!config.captureImage && config.cameraImage) {
+            loadCameraImageURL(config.cameraImage.src);
+        }
+    });
+}
 
 // Helper to convert Image object to Base64 (JPEG)
 const imageToBase64 = (img) => {
@@ -41,9 +62,9 @@ const config = {
 };
 
 // Loading indicators
-const loadingStart = (text = '生成中…') => {
+const loadingStart = (textKey = 'loading.generating') => {
     htmlEl.setAttribute('data-loading', 'true');
-    htmlEl.setAttribute('data-loading-text', text);
+    htmlEl.setAttribute('data-loading-text', t(textKey));
 };
 
 const loadingStop = () => {
@@ -52,7 +73,7 @@ const loadingStop = () => {
 
 // Image loading utilities
 const loadImageByURL = (url, onLoad) => {
-    loadingStart('加载中…');
+    loadingStart('loading.loading');
     const img = new Image();
     img.onload = () => onLoad(img);
     img.onerror = () => {
@@ -100,7 +121,7 @@ const loadCaptureImageURL = url => {
             ctx.textAlign = 'center';
             ctx.textBaseline = 'middle';
             ctx.fillText(
-                '点选或拖拽上传照片',
+                t('canvas.upload_photo'),
                 outputWidth / 2,
                 imgHeight + config.margin * 2 + imgHeight / 2
             );
@@ -144,7 +165,7 @@ const loadCameraImageURL = url => {
             ctx.textAlign = 'center';
             ctx.textBaseline = 'middle';
             ctx.fillText(
-                '点选或拖拽上传截图',
+                t('canvas.upload_screenshot'),
                 outputWidth / 2,
                 config.margin + imgHeight / 2
             );
@@ -340,12 +361,12 @@ const drawAiResultImage = (aiResultImg) => {
 // Overlay image with extracted character
 const drawOverlayImage = () => {
     if (!config.cameraImage) {
-        alert('请先上传实拍照片');
+        alert(t('msg.upload_photo_first'));
         return;
     }
 
     if (!config.extractedCharacter) {
-        alert('请先提取动漫角色');
+        alert(t('msg.extract_char_first'));
         return;
     }
 
@@ -443,7 +464,7 @@ const drawOverlayImage = () => {
 // Extract character using IS-Net
 const extractCharacter = async () => {
     if (!config.captureImage) {
-        alert('请先上传动漫截图');
+        alert(t('msg.upload_anime_first'));
         return;
     }
 
@@ -457,12 +478,14 @@ const extractCharacter = async () => {
     try {
         // Load model if needed
         if (!isnetManager.isLoaded) {
-            loadingStart('加载模型中…');
+            loadingStart('msg.model_loading');
             if (statusEl) {
                 await isnetManager.loadModel((status) => {
+                    statusEl.removeAttribute('data-i18n');
                     statusEl.textContent = status;
                 });
-                statusEl.textContent = '模型已加载';
+                statusEl.setAttribute('data-i18n', 'msg.model_loaded');
+                statusEl.textContent = t('msg.model_loaded');
             } else {
                 await isnetManager.loadModel();
             }
@@ -470,8 +493,11 @@ const extractCharacter = async () => {
         }
 
         // Extract character
-        if (statusEl) statusEl.textContent = '正在提取角色...';
-        loadingStart('提取角色中…');
+        if (statusEl) {
+            statusEl.setAttribute('data-i18n', 'msg.extracting');
+            statusEl.textContent = t('msg.extracting');
+        }
+        loadingStart('msg.extracting');
         config.extractedCharacter = await isnetManager.extractCharacter(config.captureImage);
 
         // Calculate bounding box
@@ -513,16 +539,18 @@ const extractCharacter = async () => {
 
         // Update status
         if (statusEl) {
-            statusEl.textContent = '✓ 提取成功！可拖动调整位置';
+            statusEl.setAttribute('data-i18n', 'msg.extract_success');
+            statusEl.textContent = t('msg.extract_success');
             statusEl.style.color = '#000000ff';
         }
     } catch (error) {
         loadingStop();
         if (statusEl) {
-            statusEl.textContent = '✗ 提取失败: ' + error.message;
+            statusEl.removeAttribute('data-i18n');
+            statusEl.textContent = t('msg.extract_fail') + error.message;
             statusEl.style.color = '#f44336';
         } else {
-            alert('角色提取失败: ' + error.message);
+            alert(t('msg.extract_fail') + error.message);
         }
     }
 };
@@ -530,7 +558,7 @@ const extractCharacter = async () => {
 // Download extracted character
 const downloadCharacter = () => {
     if (!config.extractedCharacter) {
-        alert('请先提取角色');
+        alert(t('msg.extract_char_first'));
         return;
     }
 
@@ -671,8 +699,11 @@ confirmBtn?.addEventListener('click', async () => {
     if (confirmModal) confirmModal.style.display = 'none';
 
     // UI State: Loading
-    loadingStart('AI 生成中…');
-    if (aiStatusEl) aiStatusEl.textContent = '正在请求 Gemini 生成...';
+    loadingStart('msg.ai_generating');
+    if (aiStatusEl) {
+        aiStatusEl.setAttribute('data-i18n', 'msg.ai_requesting');
+        aiStatusEl.textContent = t('msg.ai_requesting');
+    }
     $('#start-ai-gen-btn').disabled = true;
     if (downloadAiComparisonBtn) downloadAiComparisonBtn.style.display = 'none';
     if (downloadAiResultBtn) downloadAiResultBtn.style.display = 'none';
@@ -695,16 +726,20 @@ confirmBtn?.addEventListener('click', async () => {
             if (downloadAiComparisonBtn) downloadAiComparisonBtn.style.display = 'inline-flex';
             if (downloadAiResultBtn) downloadAiResultBtn.style.display = 'inline-flex';
 
-            if (aiStatusEl) aiStatusEl.textContent = '✓ 生成成功！';
+            if (aiStatusEl) {
+                aiStatusEl.setAttribute('data-i18n', 'msg.ai_success');
+                aiStatusEl.textContent = t('msg.ai_success');
+            }
         };
         aiImg.src = resultUrl;
 
     } catch (error) {
         if (aiStatusEl) {
-            aiStatusEl.textContent = '✗ 生成失败: ' + error.message;
+            aiStatusEl.removeAttribute('data-i18n');
+            aiStatusEl.textContent = t('msg.ai_fail') + error.message;
             aiStatusEl.style.color = '#f44336';
         } else {
-            alert('AI 生成失败: ' + error.message);
+            alert(t('msg.ai_fail') + error.message);
         }
     } finally {
         loadingStop();

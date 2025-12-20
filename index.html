@@ -12,13 +12,14 @@
 <body>
     <main class="app-container">
         <header>
-            <h1>圣地巡礼角色实景合成器</h1>
+            <h1 data-i18n="header.title">圣地巡礼角色实景合成器</h1>
+            <button id="lang-toggle" class="ui-btn secondary-btn lang-btn" data-i18n="btn.lang_toggle">English</button>
         </header>
 
         <!-- Mode Tabs -->
         <div class="mode-tabs">
-            <button class="tab-btn active" data-mode="local">本地提取</button>
-            <button class="tab-btn" data-mode="ai">AI 生成 (Nano Banana Pro 🍌)</button>
+            <button class="tab-btn active" data-mode="local" data-i18n="tab.local">本地提取</button>
+            <button class="tab-btn" data-mode="ai" data-i18n="tab.ai">AI 生成 (Nano Banana Pro 🍌)</button>
         </div>
 
         <img class="output-image">
@@ -28,12 +29,12 @@
             <!-- Image Settings Group -->
             <div class="control-group">
                 <div class="compact-control-row">
-                    <label>边框</label>
+                    <label data-i18n="label.margin">边框</label>
                     <input type="range" min="0" max="100" step="1" value="0" class="input-range-margin-overlay">
                     <span class="config-margin-value-overlay value-text">0</span>
                 </div>
                 <div class="compact-control-row">
-                    <label>底色</label>
+                    <label data-i18n="label.background">底色</label>
                     <div class="color-picker-wrapper">
                         <input type="color" value="#EEEEEE" class="input-background-color-overlay">
                     </div>
@@ -43,7 +44,7 @@
 
             <!-- Extract Button -->
             <div class="action-box">
-                <button class="ui-btn extract-btn" onclick="extractCharacter()">
+                <button class="ui-btn extract-btn" onclick="extractCharacter()" data-i18n="btn.extract">
                     提取角色
                 </button>
                 <div class="model-status"></div>
@@ -52,12 +53,12 @@
             <!-- Character Adjustment Group -->
             <div class="control-group">
                 <div class="compact-control-row">
-                    <label>大小</label>
+                    <label data-i18n="label.scale">大小</label>
                     <input type="range" min="10" max="200" step="5" value="100" class="input-character-scale">
                     <span class="config-scale-value value-text">100%</span>
                 </div>
                 <div class="compact-control-row">
-                    <label>透明</label>
+                    <label data-i18n="label.opacity">透明</label>
                     <input type="range" min="0" max="100" step="5" value="100" class="input-character-opacity">
                     <span class="config-opacity-value value-text">100%</span>
                 </div>
@@ -69,12 +70,12 @@
             <!-- Image Settings Group (Shared) -->
             <div class="control-group">
                 <div class="compact-control-row">
-                    <label>边框</label>
+                    <label data-i18n="label.margin">边框</label>
                     <input type="range" min="0" max="100" step="1" value="0" class="input-range-margin-overlay">
                     <span class="config-margin-value-overlay value-text">0</span>
                 </div>
                 <div class="compact-control-row">
-                    <label>底色</label>
+                    <label data-i18n="label.background">底色</label>
                     <div class="color-picker-wrapper">
                         <input type="color" value="#EEEEEE" class="input-background-color-overlay">
                     </div>
@@ -84,15 +85,17 @@
 
             <div class="control-group">
                 <div class="input-group">
-                    <label for="gemini-api-key">Google AI Studio API Key <a
+                    <label for="gemini-api-key" data-i18n="input.apikey.label">Google AI Studio API Key <a
                             href="https://ai.google.dev/gemini-api/docs/pricing?hl=zh-cn#gemini-3-pro-image-preview"
                             target="_blank">（生成一张图片约$0.24美元）</a></label>
-                    <input type="password" id="gemini-api-key" placeholder="请输入您的 Google AI Studio API Key">
-                    <small><a href="https://aistudio.google.com/app/apikey" target="_blank">如何获取 API
+                    <input type="password" id="gemini-api-key" placeholder="请输入您的 Google AI Studio API Key"
+                        data-i18n-placeholder="input.apikey.placeholder">
+                    <small><a href="https://aistudio.google.com/app/apikey" target="_blank" data-i18n="link.apikey">如何获取
+                            API
                             Key</a></small>
                 </div>
                 <div class="input-group">
-                    <label for="gemini-prompt">提示词（Prompt）</label>
+                    <label for="gemini-prompt" data-i18n="input.prompt.label">提示词（Prompt）</label>
                     <textarea id="gemini-prompt" rows="8">You are an expert image compositor. Task: Extract the anime character from the first image and composite it seamlessly into the second background image. 
 Requirements:
 1. Precise segmentation of the character.
@@ -103,7 +106,7 @@ Requirements:
             </div>
 
             <div class="action-box">
-                <button class="ui-btn extract-btn" id="start-ai-gen-btn">
+                <button class="ui-btn extract-btn" id="start-ai-gen-btn" data-i18n="btn.start_ai">
                     开始 AI 生成
                 </button>
                 <div id="ai-status" class="model-status"></div>
@@ -113,43 +116,47 @@ Requirements:
         <div class="output-box">
             <!-- Local Mode Buttons -->
             <div id="btns-local" class="btn-group">
-                <a class="ui-btn download-btn" target="_blank">保存对比图片</a>
-                <button class="ui-btn download-bg-btn" style="display: none;">仅保存实景合成图片</button>
-                <button class="ui-btn download-character-btn" onclick="downloadCharacter()" style="display: none;">
+                <a class="ui-btn download-btn" target="_blank" data-i18n="btn.save_comparison">保存对比图片</a>
+                <button class="ui-btn download-bg-btn" style="display: none;"
+                    data-i18n="btn.save_bg_only">仅保存实景合成图片</button>
+                <button class="ui-btn download-character-btn" onclick="downloadCharacter()" style="display: none;"
+                    data-i18n="btn.save_char_only">
                     仅保存提取角色
                 </button>
-                <button class="ui-btn secondary-btn" id="switch-to-ai-btn" style="display: none;">
+                <button class="ui-btn secondary-btn" id="switch-to-ai-btn" style="display: none;"
+                    data-i18n="btn.switch_to_ai">
                     对结果不满意？尝试 AI 生成
                 </button>
             </div>
 
             <!-- AI Mode Buttons -->
             <div id="btns-ai" class="btn-group" style="display: none;">
-                <button id="download-ai-comparison-btn" class="ui-btn download-btn"
-                    style="display: none;">保存对比图片</button>
-                <button id="download-ai-result-btn" class="ui-btn download-bg-btn"
-                    style="display: none;">仅保存实景生成图片</button>
+                <button id="download-ai-comparison-btn" class="ui-btn download-btn" style="display: none;"
+                    data-i18n="btn.save_comparison">保存对比图片</button>
+                <button id="download-ai-result-btn" class="ui-btn download-bg-btn" style="display: none;"
+                    data-i18n="btn.save_bg_only">仅保存实景生成图片</button>
             </div>
 
-            <button class="ui-btn reset-btn">重新开始</button>
+            <button class="ui-btn reset-btn" data-i18n="btn.reset">重新开始</button>
         </div>
 
         <div class="content-box">
             <br>
             <p>
-                在地图中寻找圣地
+                <span data-i18n="text.map_link">在地图中寻找圣地</span>
                 <a href="https://anitabi.cn/map" target="_blank">https://anitabi.cn</a>
             </p>
-            <p>
+            <p data-i18n="text.intro">
                 将动漫角色放置在实拍照片中！
             </p>
-            <p>
+            <p data-i18n="text.disclaimer">
                 禁止商业用途，动画截图归属动画委员会
             </p>
         </div>
 
         <footer>
-            <a href="https://lab.magiconch.com/image-merge/" target="_blank">本项目基于Image Merge项目开发</a>
+            <a href="https://lab.magiconch.com/image-merge/" target="_blank" data-i18n="footer.credit">本项目基于Image
+                Merge项目开发</a>
             <br>
             <br>
             <a href="https://github.com/haoyang504/Anime_In_Real" target="_blank">GitHub</a>
@@ -159,13 +166,13 @@ Requirements:
     <!-- Confirmation Modal -->
     <div id="confirm-modal" class="modal-overlay" style="display: none;">
         <div class="modal-box">
-            <h3>确认生成？</h3>
-            <p>此功能需要使用您自己的 Google AI Studio API Key</p>
-            <p class="warning-text">⚠️ 生成一张图片约需花费 $0.24 美元</p>
+            <h3 data-i18n="modal.confirm.title">确认生成？</h3>
+            <p data-i18n="modal.confirm.desc">此功能需要使用您自己的 Google AI Studio API Key</p>
+            <p class="warning-text" data-i18n="modal.confirm.warning">⚠️ 生成一张图片约需花费 $0.24 美元</p>
             <div class="modal-actions">
-                <button id="cancel-gen-btn" class="ui-btn secondary-btn"
-                    style="background: #f3f4f6; color: #1f2937;">取消</button>
-                <button id="confirm-gen-btn" class="ui-btn extract-btn">确认生成</button>
+                <button id="cancel-gen-btn" class="ui-btn secondary-btn" style="background: #f3f4f6; color: #1f2937;"
+                    data-i18n="btn.cancel">取消</button>
+                <button id="confirm-gen-btn" class="ui-btn extract-btn" data-i18n="btn.confirm">确认生成</button>
             </div>
         </div>
     </div>
