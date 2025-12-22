@@ -278,6 +278,57 @@ document.addEventListener('mouseup', () => {
     }
 });
 
+// Touch events for mobile
+outputEl.addEventListener('touchstart', e => {
+    if (!config.extractedCharacter || config.currentMode !== 'local') return;
+    if (e.touches.length !== 1) return; // Only single touch
+
+    isDragging = true;
+    dragStartX = e.touches[0].clientX;
+    dragStartY = e.touches[0].clientY;
+    charStartX = config.characterX;
+    charStartY = config.characterY;
+
+    e.preventDefault(); // Prevent scrolling while dragging
+}, { passive: false });
+
+document.addEventListener('touchmove', e => {
+    if (!isDragging) return;
+    if (e.touches.length !== 1) return;
+
+    if (rafId) {
+        cancelAnimationFrame(rafId);
+    }
+
+    rafId = requestAnimationFrame(() => {
+        const rect = outputEl.getBoundingClientRect();
+        const scaleX = config.cameraImage.naturalWidth / rect.width;
+        const scaleY = config.cameraImage.naturalHeight / rect.height;
+
+        const deltaX = (e.touches[0].clientX - dragStartX) * scaleX;
+        const deltaY = (e.touches[0].clientY - dragStartY) * scaleY;
+
+        config.characterX = charStartX + deltaX;
+        config.characterY = charStartY + deltaY;
+
+        drawOverlayImage();
+        rafId = null;
+    });
+
+    e.preventDefault(); // Prevent scrolling
+}, { passive: false });
+
+document.addEventListener('touchend', () => {
+    if (isDragging) {
+        isDragging = false;
+
+        if (rafId) {
+            cancelAnimationFrame(rafId);
+            rafId = null;
+        }
+    }
+});
+
 // Download button
 const downloadBtn = $('.download-btn');
 if (downloadBtn) {
